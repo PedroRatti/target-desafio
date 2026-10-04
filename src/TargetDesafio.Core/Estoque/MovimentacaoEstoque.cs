@@ -1,7 +1,7 @@
 namespace TargetDesafio.Core.Estoque;
 
 public sealed record MovimentacaoEstoque(
-    Guid Identificador,
+    long Identificador,
     int CodigoProduto,
     string DescricaoProduto,
     TipoMovimentacao Tipo,

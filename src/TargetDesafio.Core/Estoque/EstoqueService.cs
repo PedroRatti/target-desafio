@@ -4,6 +4,8 @@ public sealed class EstoqueService
 {
     private readonly Dictionary<int, Produto> _produtos;
     private readonly List<MovimentacaoEstoque> _movimentacoes = [];
+    private readonly object _sincronizacao = new();
+    private long _ultimoIdentificador;
 
     public EstoqueService(IEnumerable<Produto> produtos)
     {
@@ -28,22 +30,35 @@ public sealed class EstoqueService
 
     public IReadOnlyList<Produto> ListarProdutos()
     {
-        return _produtos.Values.OrderBy(produto => produto.CodigoProduto).ToList();
+        lock (_sincronizacao)
+        {
+            return _produtos.Values
+                .OrderBy(produto => produto.CodigoProduto)
+                .ToList();
+        }
     }
 
     public Produto BuscarProduto(int codigoProduto)
     {
-        if (!_produtos.TryGetValue(codigoProduto, out var produto))
+        lock (_sincronizacao)
         {
-            throw new KeyNotFoundException($"Produto de código {codigoProduto} não encontrado.");
-        }
+            if (!_produtos.TryGetValue(codigoProduto, out var produto))
+            {
+                throw new KeyNotFoundException(
+                    $"Produto de código {codigoProduto} não encontrado."
+                );
+            }
 
-        return produto;
+            return produto;
+        }
     }
 
     public IReadOnlyList<MovimentacaoEstoque> ListarMovimentacoes()
     {
-        return _movimentacoes.ToList();
+        lock (_sincronizacao)
+        {
+            return _movimentacoes.ToList();
+        }
     }
 
     public MovimentacaoEstoque RegistrarMovimentacao(
@@ -53,48 +68,67 @@ public sealed class EstoqueService
         string descricao
     )
     {
-        if (quantidade <= 0)
+        lock (_sincronizacao)
         {
-            throw new ArgumentOutOfRangeException(nameof(quantidade), "A quantidade movimentada deve ser positiva.");
+            if (quantidade <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(quantidade),
+                    "A quantidade movimentada deve ser positiva."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(descricao))
+            {
+                throw new ArgumentException(
+                    "A descrição da movimentação é obrigatória.",
+                    nameof(descricao)
+                );
+            }
+
+            var produto = BuscarProduto(codigoProduto);
+            var estoqueAnterior = produto.Estoque;
+
+            var estoqueFinal = tipo switch
+            {
+                TipoMovimentacao.Entrada =>
+                    checked(estoqueAnterior + quantidade),
+
+                TipoMovimentacao.Saida
+                    when quantidade <= estoqueAnterior =>
+                        estoqueAnterior - quantidade,
+
+                TipoMovimentacao.Saida =>
+                    throw new InvalidOperationException(
+                        "Estoque insuficiente. " +
+                        $"Quantidade disponível: {estoqueAnterior}."
+                    ),
+
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(tipo),
+                    "Tipo de movimentação inválido."
+                )
+            };
+
+            var identificador = checked(_ultimoIdentificador + 1);
+            produto.AtualizarEstoque(estoqueFinal);
+
+            var movimentacao = new MovimentacaoEstoque(
+                Identificador: identificador,
+                CodigoProduto: produto.CodigoProduto,
+                DescricaoProduto: produto.DescricaoProduto,
+                Tipo: tipo,
+                Descricao: descricao.Trim(),
+                Quantidade: quantidade,
+                EstoqueAnterior: estoqueAnterior,
+                EstoqueFinal: estoqueFinal,
+                RegistradaEm: DateTimeOffset.Now
+            );
+
+            _movimentacoes.Add(movimentacao);
+            _ultimoIdentificador = identificador;
+
+            return movimentacao;
         }
-
-        if (string.IsNullOrWhiteSpace(descricao))
-        {
-            throw new ArgumentException("A descrição da movimentação é obrigatória.", nameof(descricao));
-        }
-
-        var produto = BuscarProduto(codigoProduto);
-        var estoqueAnterior = produto.Estoque;
-
-        var estoqueFinal = tipo switch
-        {
-            TipoMovimentacao.Entrada => checked(estoqueAnterior + quantidade),
-
-            TipoMovimentacao.Saida
-                when quantidade <= estoqueAnterior => estoqueAnterior - quantidade,
-
-            TipoMovimentacao.Saida =>
-                throw new InvalidOperationException($"Estoque insuficiente. Quantidade disponível: {estoqueAnterior}."),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(tipo), "Tipo de movimentação inválido.")
-        };
-
-        produto.AtualizarEstoque(estoqueFinal);
-
-        var movimentacao = new MovimentacaoEstoque(
-            Identificador: Guid.NewGuid(),
-            CodigoProduto: produto.CodigoProduto,
-            DescricaoProduto: produto.DescricaoProduto,
-            Tipo: tipo,
-            Descricao: descricao.Trim(),
-            Quantidade: quantidade,
-            EstoqueAnterior: estoqueAnterior,
-            EstoqueFinal: estoqueFinal,
-            RegistradaEm: DateTimeOffset.Now
-        );
-
-        _movimentacoes.Add(movimentacao);
-
-        return movimentacao;
     }
 }

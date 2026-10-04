@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f8fa">
+    <title>Target | Desafio técnico</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <p class="eyebrow">Target · Desafio técnico</p>
+        <h1>Painel de operações</h1>
+        <p class="intro">Consulte comissões, movimente o estoque e calcule juros em um só lugar.</p>
+        <nav class="section-nav" aria-label="Navegação da página">
+          <a href="#comissoes">Comissões</a>
+          <a href="#estoque">Estoque</a>
+          <a href="#juros">Juros</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container main-content">
+      <section class="panel" id="comissoes" aria-labelledby="titulo-comissoes">
+        <div class="section-heading">
+          <div>
+            <p class="section-number">01 / Vendas</p>
+            <h2 id="titulo-comissoes">Comissões por vendedor</h2>
+            <p>Resumo calculado a partir das vendas cadastradas.</p>
+          </div>
+          <button class="button button-secondary" id="atualizar-comissoes" type="button">Atualizar</button>
+        </div>
+        <p class="status" id="status-comissoes" role="status" aria-live="polite">Carregando comissões...</p>
+        <div class="table-scroll" id="quadro-comissoes" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Vendedor</th>
+                <th scope="col" class="numeric">Total vendido</th>
+                <th scope="col" class="numeric">Comissão</th>
+              </tr>
+            </thead>
+            <tbody id="lista-comissoes"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="estoque" aria-labelledby="titulo-estoque">
+        <div class="section-heading">
+          <div>
+            <p class="section-number">02 / Produtos</p>
+            <h2 id="titulo-estoque">Estoque</h2>
+            <p>O saldo e o histórico são mantidos enquanto a aplicação estiver aberta.</p>
+          </div>
+          <button class="button button-secondary" id="atualizar-estoque" type="button">Atualizar</button>
+        </div>
+
+        <p class="status" id="status-estoque" role="status" aria-live="polite">Carregando produtos...</p>
+        <div class="table-scroll" id="quadro-estoque" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Código</th>
+                <th scope="col">Produto</th>
+                <th scope="col" class="numeric">Em estoque</th>
+              </tr>
+            </thead>
+            <tbody id="lista-estoque"></tbody>
+          </table>
+        </div>
+
+        <div class="subsection">
+          <h3>Registrar movimentação</h3>
+          <form id="form-movimentacao">
+            <div class="form-grid">
+              <div class="field field-wide">
+                <label for="produto">Produto</label>
+                <select id="produto" name="codigoProduto" required disabled>
+                  <option value="">Carregando produtos...</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" required>
+                  <option value="entrada">Entrada</option>
+                  <option value="saida">Saída</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="quantidade">Quantidade</label>
+                <input id="quantidade" name="quantidade" type="number" min="1" step="1" inputmode="numeric" required>
+              </div>
+              <div class="field field-wide">
+                <label for="descricao">Descrição</label>
+                <input id="descricao" name="descricao" type="text" maxlength="120" placeholder="Ex.: Compra do fornecedor" required>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="button button-primary" id="enviar-movimentacao" type="submit" disabled>Registrar</button>
+              <p class="status" id="status-movimentacao" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </div>
+
+        <div class="subsection">
+          <h3>Histórico de movimentações</h3>
+          <p class="status" id="status-historico" role="status" aria-live="polite">Carregando histórico...</p>
+          <div class="table-scroll" id="quadro-historico" hidden>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Data</th>
+                  <th scope="col">Produto</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col" class="numeric">Quantidade</th>
+                  <th scope="col" class="numeric">Saldo final</th>
+                </tr>
+              </thead>
+              <tbody id="lista-historico"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="juros" aria-labelledby="titulo-juros">
+        <div class="section-heading">
+          <div>
+            <p class="section-number">03 / Pagamentos</p>
+            <h2 id="titulo-juros">Cálculo de juros</h2>
+            <p>Juros simples de 2,5% por dia de atraso, calculados até hoje.</p>
+          </div>
+        </div>
+        <form id="form-juros">
+          <div class="form-grid form-grid-small">
+            <div class="field">
+              <label for="valor-original">Valor original (R$)</label>
+              <input id="valor-original" name="valorOriginal" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+            </div>
+            <div class="field">
+              <label for="data-vencimento">Data de vencimento</label>
+              <input id="data-vencimento" name="dataVencimento" type="date" required>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="button button-primary" id="enviar-juros" type="submit">Calcular</button>
+            <p class="status" id="status-juros" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+        <div class="result" id="resultado-juros" aria-live="polite" hidden>
+          <h3>Resultado</h3>
+          <dl>
+            <div><dt>Dias em atraso</dt><dd id="juros-dias"></dd></div>
+            <div><dt>Valor dos juros</dt><dd id="juros-valor"></dd></div>
+            <div class="result-total"><dt>Total a pagar</dt><dd id="juros-total"></dd></div>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer container">Target · Desafio técnico em C# e ASP.NET Core</footer>
+  </body>
+</html>

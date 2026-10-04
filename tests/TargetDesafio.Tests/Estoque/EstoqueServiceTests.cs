@@ -78,6 +78,8 @@ public sealed class EstoqueServiceTests
             primeira.Identificador,
             segunda.Identificador
         );
+        Assert.Equal(1L, primeira.Identificador);
+        Assert.Equal(2L, segunda.Identificador);
     }
 
     [Fact]

@@ -1,0 +1,46 @@
+@TargetDesafio.Web_HostAddress = http://localhost:5166
+
+GET {{TargetDesafio.Web_HostAddress}}/api/comissoes
+Accept: application/json
+
+###
+
+GET {{TargetDesafio.Web_HostAddress}}/api/estoque
+Accept: application/json
+
+###
+
+GET {{TargetDesafio.Web_HostAddress}}/api/estoque/101
+Accept: application/json
+
+###
+
+POST {{TargetDesafio.Web_HostAddress}}/api/estoque/movimentacoes
+Content-Type: application/json
+
+{
+  "codigoProduto": 101,
+  "tipo": "saida",
+  "quantidade": 10,
+  "descricao": "Venda para cliente"
+}
+
+###
+
+GET {{TargetDesafio.Web_HostAddress}}/api/estoque/movimentacoes
+Accept: application/json
+
+###
+
+POST {{TargetDesafio.Web_HostAddress}}/api/juros/calcular
+Content-Type: application/json
+
+{
+  "valorOriginal": 100.00,
+  "dataVencimento": "2026-10-01"
+}
+
+###
+
+GET {{TargetDesafio.Web_HostAddress}}/openapi/v1.json
+Accept: application/json
